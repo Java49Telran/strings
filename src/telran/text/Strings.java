@@ -12,12 +12,11 @@ public static String zero_300() {
 public static String ipV4Octet() {
 	//TODO
 	//positive number from 0 to 255 and leading zeros are allowed
-	return "";
+	return  "[01]?\\d\\d?|2([0-4]\\d|5[0-5])";
 }
 public static String ipV4() {
-	//TODO
-	//four ipV4 octets separated by dot 123.123.255.01
-	return "";
+	String octetRegex = ipV4Octet();
+	return String.format("((%s)[.]){3}(%s)",octetRegex, octetRegex );
 }
 
 }
