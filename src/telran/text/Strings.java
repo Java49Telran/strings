@@ -1,10 +1,11 @@
 package telran.text;
 
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.function.BinaryOperator;
 
 public class Strings {
-	static HashMap<String, BinaryOperator<Integer>> mapOperations;
+	static HashMap<String, BinaryOperator<Double>> mapOperations;
 	static {
 		mapOperations = new HashMap<>();
 		mapOperations.put("-", (a, b) -> a - b);
@@ -37,15 +38,20 @@ public static String arithmeticExpression() {
 public static String operator() {
 	return "\\s*([-+*/])\\s*";
 }
-public static String operand() {
-	//assumption: not unary operators
-	return "(\\d+)";
+private static String operand() {
+	String numberExp = numberExp();
+	String variableExp = javaVariableName();
+	return String.format("((%s|%s))", numberExp, variableExp);
+}
+private static String numberExp() {
+	return "(\\d+\\.?\\d*|\\.\\d+)";
 }
 public static boolean isArithmeticExpression(String expression) {
 	expression = expression.trim();
 	return expression.matches(arithmeticExpression());
 }
-public static int computeExpression(String expression) {
+public static double computeExpression(String expression,
+		HashMap<String, Double> mapVariables) {
 	
 	if (!isArithmeticExpression(expression)) {
 		throw new IllegalArgumentException("Wrong arithmetic expression");
@@ -53,20 +59,26 @@ public static int computeExpression(String expression) {
 	expression = expression.replaceAll("\\s+", "");
 	String[] operands = expression.split(operator());
 	String [] operators = expression.split(operand());
-	int res = Integer.parseInt(operands[0]);
+	double res = getValue(operands[0], mapVariables);
 	for(int i = 1; i < operands.length; i++) {
-		int operand = Integer.parseInt(operands[i]);
+		double operand = getValue(operands[i], mapVariables);
 		res = mapOperations.get(operators[i]).apply(res, operand);
 	}
 	
 	return res;
 }
-//Update whole code for any numbers (double)
-//Update code taking into consideration possible variable names
-public static double computeExpression(String expression,
-		HashMap<String, Double> mapVariables) {
-	//TODO
-	return 0;
+private static double getValue(String operand, HashMap<String, Double> mapVariables) {
+	double res = 0;
+	if (operand.matches(javaVariableName())) {
+		if(!mapVariables.containsKey(operand)) {
+			throw new NoSuchElementException();
+		}
+		res = mapVariables.get(operand);
+	} else {
+		res = Double.parseDouble(operand);
+	}
+	return res;
 }
+
 
 }
